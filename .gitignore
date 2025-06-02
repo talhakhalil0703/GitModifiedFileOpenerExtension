@@ -11,3 +11,7 @@ pnpm-debug.log*
 Thums.db
 
 .vscode/
+
+publishing_token
+
+git-open-modified-*.vsix
