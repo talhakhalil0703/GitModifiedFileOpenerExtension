@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { API as GitAPI, Repository } from "../typings/git";
+import { API as GitAPI, Repository, Status } from "../typings/git";
 
 export async function activate(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand(
@@ -27,14 +27,35 @@ export async function activate(context: vscode.ExtensionContext) {
 
       /* TODO: Handle multiple repos, and maybe ask the user to choose one? */
       const repo = repos[0];
+      vscode.window.showInformationMessage(
+          "Using repository: " + repo.rootUri.fsPath
+      );
+      console.log("These are all the repos: ", repos);
+      console.log("Using the first repo: ", repo);
 
       /* Get changes, staged and modified. */
       const modified = repo.state.workingTreeChanges;
       const staged = repo.state.indexChanges;
 
+      console.log("Modified files: ", modified);
+      console.debug("Staged files: ", staged);
+
       const allChanges = [...modified, ...staged];
 
-      if (allChanges.length === 0) {
+      /* We're going to go through all the changes, and remove the ones that indicate a file was deleted. */
+      /* This can be done by looking at the status and seeing if it is 'DELETED' or 'INDEX_DELETED'. */
+      const filteredChanges = allChanges.filter(
+        (change) =>
+          change.status !== Status.DELETED &&
+          change.status !== Status.INDEX_DELETED
+      );
+
+      console.log(
+        "Filtered changes (no deleted files): ",
+        filteredChanges
+      );
+
+      if (filteredChanges.length === 0) {
         vscode.window.showInformationMessage(
           "No modified or staged files found."
         );
@@ -42,7 +63,7 @@ export async function activate(context: vscode.ExtensionContext) {
       }
 
       /* Open each file in the editor. */
-      for (const change of allChanges) {
+      for (const change of filteredChanges) {
         const doc = await vscode.workspace.openTextDocument(change.uri);
         await vscode.window.showTextDocument(doc, { preview: false });
       }
@@ -52,5 +73,4 @@ export async function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(disposable);
 }
 
-export function deactivate() {
-}
+export function deactivate() {}
