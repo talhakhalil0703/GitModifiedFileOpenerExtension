@@ -9,13 +9,15 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
-  "main": "./out/extension.js",
+  "activationEvents": [
+    "onCommand:extension.openModifiedFiles"
+  ],
+  "main": "out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "git-open-modified.helloWorld",
-        "title": "Hello World"
+        "command": "extension.openModifiedFiles",
+        "title": "Open Modified/Staged Files"
       }
     ]
   },

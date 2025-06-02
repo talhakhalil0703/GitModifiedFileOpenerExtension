@@ -1,26 +1,56 @@
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
-import * as vscode from 'vscode';
+import * as vscode from "vscode";
 
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
-export function activate(context: vscode.ExtensionContext) {
+import { API as GitAPI, Repository } from "../typings/git";
 
-	// Use the console to output diagnostic information (console.log) and errors (console.error)
-	// This line of code will only be executed once when your extension is activated
-	console.log('Congratulations, your extension "git-open-modified" is now active!');
+export async function activate(context: vscode.ExtensionContext) {
+  const disposable = vscode.commands.registerCommand(
+    "extension.openModifiedFiles",
+    async () => {
+      const gitExtension = vscode.extensions.getExtension<{
+        getAPI(version: number): GitAPI;
+      }>("vscode.git");
 
-	// The command has been defined in the package.json file
-	// Now provide the implementation of the command with registerCommand
-	// The commandId parameter must match the command field in package.json
-	const disposable = vscode.commands.registerCommand('git-open-modified.helloWorld', () => {
-		// The code you place here will be executed every time your command is executed
-		// Display a message box to the user
-		vscode.window.showInformationMessage('Hello World from git-open-modified!');
-	});
+      if (!gitExtension) {
+        vscode.window.showErrorMessage("Git extension not found");
+        return;
+      }
 
-	context.subscriptions.push(disposable);
+      const git = gitExtension.isActive
+        ? gitExtension.exports.getAPI(1)
+        : (await gitExtension.activate()).getAPI(1);
+
+      const repos: Repository[] = git.repositories;
+      if (repos.length === 0) {
+        vscode.window.showInformationMessage("No Git repo detected");
+        return;
+      }
+
+      /* TODO: Handle multiple repos, and maybe ask the user to choose one? */
+      const repo = repos[0];
+
+      /* Get changes, staged and modified. */
+      const modified = repo.state.workingTreeChanges;
+      const staged = repo.state.indexChanges;
+
+      const allChanges = [...modified, ...staged];
+
+      if (allChanges.length === 0) {
+        vscode.window.showInformationMessage(
+          "No modified or staged files found."
+        );
+        return;
+      }
+
+      /* Open each file in the editor. */
+      for (const change of allChanges) {
+        const doc = await vscode.workspace.openTextDocument(change.uri);
+        await vscode.window.showTextDocument(doc, { preview: false });
+      }
+    }
+  );
+
+  context.subscriptions.push(disposable);
 }
 
-// This method is called when your extension is deactivated
-export function deactivate() {}
+export function deactivate() {
+}
