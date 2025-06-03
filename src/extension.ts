@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 
-import { API as GitAPI, Repository, Status } from "../typings/git";
+import { API as GitAPI, Repository, ResourceChange, Status } from "../typings/git";
 
 export async function activate(context: vscode.ExtensionContext) {
   const disposable = vscode.commands.registerCommand(
@@ -25,22 +25,23 @@ export async function activate(context: vscode.ExtensionContext) {
         return;
       }
 
-      /* TODO: Handle multiple repos, and maybe ask the user to choose one? */
-      const repo = repos[0];
-      vscode.window.showInformationMessage(
-          "Using repository: " + repo.rootUri.fsPath
-      );
-      console.log("These are all the repos: ", repos);
-      console.log("Using the first repo: ", repo);
+      /* Iterate through all the repositories. */
 
-      /* Get changes, staged and modified. */
-      const modified = repo.state.workingTreeChanges;
-      const staged = repo.state.indexChanges;
+      var modifiedFiles: ResourceChange[] = [];
+      var stagedFiles: ResourceChange[] = [];
+      for (const repo of repos){
+        /* Find all the modified and staged files in this repo and add it to our
+        modified and staged arrays. */
+        const modified = repo.state.workingTreeChanges;
+        const staged = repo.state.indexChanges;
+        modifiedFiles = modifiedFiles.concat(modified);
+        stagedFiles = stagedFiles.concat(staged);
+      }
 
-      console.log("Modified files: ", modified);
-      console.debug("Staged files: ", staged);
+      console.log("Modified files: ", modifiedFiles);
+      console.debug("Staged files: ", stagedFiles);
 
-      const allChanges = [...modified, ...staged];
+      const allChanges = [...modifiedFiles, ...stagedFiles];
 
       /* We're going to go through all the changes, and remove the ones that indicate a file was deleted. */
       /* This can be done by looking at the status and seeing if it is 'DELETED' or 'INDEX_DELETED'. */
