@@ -1,10 +1,10 @@
 {
   "name": "git-open-modified",
   "publisher": "TalhaKhalil",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/talhakhalil0703/vscode-git-open-modified"
-    },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/talhakhalil0703/vscode-git-open-modified"
+  },
   "license": "MIT",
   "author": {
     "name": "Talha Khalil",
@@ -13,7 +13,7 @@
   "icon": "images/icon.png",
   "displayName": "Git Open Modified",
   "description": "This extension allows you to open all files that are currently modified in your working git directory.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "engines": {
     "vscode": "^1.100.0"
   },
