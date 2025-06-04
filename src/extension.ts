@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
-
+import { existsSync, statSync } from 'fs';
+import { resolve } from 'path';
 import { API as GitAPI, Repository, ResourceChange, Status } from "../typings/git";
 
 export async function activate(context: vscode.ExtensionContext) {
@@ -28,6 +29,7 @@ export async function activate(context: vscode.ExtensionContext) {
       /* Iterate through all the repositories. */
 
       var modifiedFiles: ResourceChange[] = [];
+
       var stagedFiles: ResourceChange[] = [];
       for (const repo of repos){
         /* Find all the modified and staged files in this repo and add it to our
@@ -48,8 +50,10 @@ export async function activate(context: vscode.ExtensionContext) {
       const filteredChanges = allChanges.filter(
         (change) =>
           change.status !== Status.DELETED &&
-          change.status !== Status.INDEX_DELETED
+          change.status !== Status.INDEX_DELETED &&
+          (existsSync(change.uri.fsPath) && !statSync(change.uri.fsPath).isDirectory())
       );
+
 
       console.log(
         "Filtered changes (no deleted files): ",
